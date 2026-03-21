@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traversable — JSON path &amp; syntax</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <div class="brand-bar">
+        <img
+          class="brand-logo"
+          src="../branding/trvlogo.png"
+          width="56"
+          height="56"
+          alt="Traversable"
+        />
+      </div>
+      <header class="hero">
+        <h1 class="title">
+          Traversable
+          <span class="pronunciation" title="Dictionary-style pronunciation"
+            >[tra·verse trə-ˈvərs &nbsp;also tra-ˈvərs]</span
+          >
+        </h1>
+        <p class="lede">
+          Traversable helps you find the correct syntax in your language of
+          choice to traverse JSON structures. Large data sets are hard to
+          navigate when nodes are nested many levels deep. Paste your JSON,
+          specify a path (step-by-step, tree, or by key name), then copy the
+          result back into your project.
+        </p>
+        <nav class="howto" aria-label="How to use">
+          <strong>How it works</strong>
+          <ol class="howto-list">
+            <li>
+              <a href="#step-1">Paste JSON</a> and click <strong>Parse JSON</strong>.
+            </li>
+            <li>
+              <a href="#step-2">Pick how you locate a value</a>: wizard, tree, or
+              find by key.
+            </li>
+            <li>
+              <a href="#step-3">Choose language &amp; options</a>, generate, then
+              <strong>Copy</strong>.
+            </li>
+          </ol>
+        </nav>
+      </header>
+
+      <section class="card" id="step-1">
+        <h2>
+          <span class="step-disc" aria-hidden="true">1</span>
+          Provide JSON
+        </h2>
+        <textarea
+          id="jsonInput"
+          spellcheck="false"
+          aria-label="JSON input"
+        >{
+  "users": [
+    {
+      "id": 101,
+      "profile": {
+        "name": "Asha",
+        "skills": ["TypeScript", "Node", "SQL"]
+      }
+    },
+    {
+      "id": 102,
+      "profile": {
+        "name": "Leo",
+        "skills": ["Python", "FastAPI"]
+      }
+    }
+  ],
+  "meta": {
+    "count": 2
+  }
+}</textarea>
+        <div class="actions">
+          <button type="button" id="parseBtn">Parse JSON</button>
+          <button type="button" id="clearBtn" class="ghost">Clear/Reset</button>
+        </div>
+        <p id="parseStatus" class="status" role="status"></p>
+      </section>
+
+      <section class="card" id="step-2">
+        <h2>
+          <span class="step-disc" aria-hidden="true">2</span>
+          Locate the value
+        </h2>
+        <p class="hint">
+          Choose <strong>one</strong> way to set the target path. Switching mode
+          clears the current selection until you pick again.
+        </p>
+        <fieldset class="mode-fieldset">
+          <legend class="visually-hidden">Path selection mode</legend>
+          <label class="mode-option">
+            <input type="radio" name="pathMode" value="wizard" checked />
+            Step-by-step wizard
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="pathMode" value="tree" />
+            Browse node tree
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="pathMode" value="key" />
+            Find by property key
+          </label>
+        </fieldset>
+
+        <!-- Wizard panel -->
+        <div id="panelWizard" class="mode-panel">
+          <label for="wizardFilter" class="filter-label"
+            >Filter next steps (keys / index numbers)</label
+          >
+          <input
+            id="wizardFilter"
+            type="search"
+            placeholder="e.g. profile, 0, id…"
+            autocomplete="off"
+          />
+          <div class="wizard-grid">
+            <div>
+              <h3>Current location</h3>
+              <code id="currentPath">$</code>
+              <p id="currentType">Type: -</p>
+            </div>
+            <div>
+              <h3>Available next steps</h3>
+              <ul id="nextSteps"></ul>
+            </div>
+          </div>
+        <div class="actions">
+          <button type="button" id="backBtn" class="ghost">Back</button>
+          <button type="button" id="setTargetBtn">Use current node as target</button>
+        </div>
+        <p id="wizardStatus" class="status status--sub" role="status"></p>
+      </div>
+
+        <!-- Tree panel -->
+        <div id="panelTree" class="mode-panel hidden" hidden>
+          <label for="treeFilter" class="filter-label"
+            >Filter tree (matches key names; shows matching branches)</label
+          >
+          <input
+            id="treeFilter"
+            type="search"
+            placeholder="Type to narrow large structures…"
+            autocomplete="off"
+          />
+          <div id="treeScroll" class="tree-scroll" role="tree" aria-label="JSON tree">
+            <p id="treeEmpty" class="muted">Parse JSON to browse the tree.</p>
+            <ul id="treeRoot" class="tree-root"></ul>
+          </div>
+          <p id="treeStatus" class="status status--sub" role="status"></p>
+        </div>
+
+        <!-- Key search panel -->
+        <div id="panelKey" class="mode-panel hidden" hidden>
+          <label for="keySearchInput">Property key to find (case-insensitive)</label>
+          <div class="key-row">
+            <input
+              id="keySearchInput"
+              type="text"
+              placeholder="e.g. price, departmentNo"
+              autocomplete="off"
+            />
+            <button type="button" id="keyFindBtn">Find paths</button>
+          </div>
+          <p class="muted small">
+            Spelling must match the JSON key; matching ignores letter case. If
+            the key appears in several places, choose the path you meant.
+          </p>
+          <ul id="keyResults" class="key-results"></ul>
+          <p id="keyStatus" class="status status--sub" role="status"></p>
+        </div>
+      </section>
+
+      <section class="card" id="step-3">
+        <h2>
+          <span class="step-disc" aria-hidden="true">3</span>
+          Language &amp; result
+        </h2>
+        <label for="targetPath">Target path</label>
+        <input id="targetPath" type="text" readonly placeholder="Set via step 2" />
+
+        <label for="language">Programming language</label>
+        <select id="language">
+          <option value="javascript">JavaScript / TypeScript</option>
+          <option value="python">Python</option>
+          <option value="csharp">C#</option>
+          <option value="java">Java</option>
+          <option value="php">PHP</option>
+        </select>
+
+        <div class="checkbox-row">
+          <label class="checkbox-label-block">
+            <span class="checkbox-line">
+              <input type="checkbox" id="safeAccess" />
+              <span class="checkbox-label-text"
+                >Safe / null-tolerant access</span
+              >
+            </span>
+            <span class="checkbox-hint"
+              >(optional chaining, <code>.path()</code>, <code>.get()</code>,
+              etc.)
+              <a class="inline-footnote-ref" href="#footnote-safe-access"
+                >What is this?</a
+              ></span
+            >
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="generateBtn">Generate Traversal Syntax</button>
+        </div>
+
+        <div class="result-header">
+          <h3>Result</h3>
+          <button type="button" id="copyBtn" class="copy-btn" disabled>
+            Copy to clipboard
+          </button>
+        </div>
+        <pre id="resultCode" aria-live="polite"></pre>
+        <p id="copyFeedback" class="status status--sub" role="status"></p>
+
+        <details class="runtime-details">
+          <summary>
+            Import / parse JSON in this language (runtime example)
+            <a class="inline-footnote-ref" href="#footnote-runtime-example"
+              >What is this?</a
+            >
+          </summary>
+          <pre id="runtimeExample" class="runtime-pre"></pre>
+        </details>
+      </section>
+
+      <aside class="footnotes" id="footnotes" aria-label="Option explanations">
+        <h2 class="footnotes-title">What these options mean</h2>
+
+        <div class="footnote" id="footnote-safe-access">
+          <h3 class="footnote-heading">
+            <span class="footnote-marker">1</span> Safe / null-tolerant access
+          </h3>
+          <p>
+            This changes <strong>how</strong> the generated code reads nested
+            values when something along the path might be missing or the wrong
+            type (e.g. no key, <code>null</code>, or an array where an object was
+            expected).
+          </p>
+          <ul class="footnote-list">
+            <li>
+              <strong>Without (off):</strong> You get the shortest direct access
+              (e.g. <code>data["a"][0]</code>). If any step is missing, the
+              runtime will often <strong>throw</strong> or error (e.g.
+              “cannot read property of undefined”).
+            </li>
+            <li>
+              <strong>With (on):</strong> You get patterns that avoid crashing on
+              missing data—e.g. JavaScript
+              <strong>optional chaining</strong> (<code>?.</code>), Jackson
+              <strong><code>.path()</code></strong> (returns a “missing” node
+              instead of <code>null</code> everywhere), C#
+              <strong>null-conditional</strong> <code>?[...]</code> on
+              <code>JToken</code>, Python <strong><code>get_path</code></strong>
+              helper, PHP <strong><code>isset</code></strong> guard. The
+              <strong>resulting value</strong> may be <code>undefined</code>,
+              <code>null</code>, <code>None</code>, or a missing node—you check
+              that in your own code.
+            </li>
+          </ul>
+        </div>
+
+        <div class="footnote" id="footnote-runtime-example">
+          <h3 class="footnote-heading">
+            <span class="footnote-marker">2</span> Import / parse JSON (runtime
+            example)
+          </h3>
+          <p>
+            This panel is <strong>not</strong> part of the path you copy. It
+            only shows <strong>sample code</strong> for turning JSON text or a
+            file into a variable (e.g. <code>data</code>) in your chosen
+            language, so the traversal snippet has something to attach to.
+          </p>
+          <ul class="footnote-list">
+            <li>
+              <strong>Collapsed / ignored:</strong> Your copied result is still
+              only the traversal lines from the <strong>Result</strong> box. You
+              combine them with however you already load JSON.
+            </li>
+            <li>
+              <strong>Open / used as reference:</strong> You paste or adapt the
+              parse/import example so <code>data</code> (or equivalent) exists,
+              then paste the generated access next to it. Nothing runs inside
+              Traversable; it’s documentation for your project.
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <footer class="site-footer">
+        <div class="site-footer__github">
+          <a
+            class="footer-link"
+            href="https://github.com/NejLee"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Néja Leedham (NejLee) on GitHub"
+            >NejLee on GitHub</a
+          >
+        </div>
+        <div class="site-footer__copy">
+          <p class="footer-copy">
+            © <span id="footer-year-range">2026</span>
+            <a
+              class="footer-link"
+              href="https://squaregoddess.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Squaregoddess</a
+            >. All rights reserved.
+          </p>
+        </div>
+        <div class="site-footer__legal">
+          <p class="footer-legal">
+            <strong>Privacy, cookies &amp; GDPR:</strong> Traversable runs in
+            your browser. Your JSON and uploads are <strong>not</strong> stored
+            on any server; data exists only in your session memory and is
+            discarded as soon as you leave the page, refresh, or use
+            Clear/Reset. No tracking cookies are required for this tool.
+          </p>
+        </div>
+      </footer>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
