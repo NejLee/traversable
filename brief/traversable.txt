@@ -1,9 +1,0 @@
-traversable [~able to be traversed]
----
-1. Take JSON string, even complex ones and show how to traverse nodes to access data. 
-2. traverse complex multi-dimensional arrays (associative or indexed).
-
-In bot cases shows examples of how to traverse a user loaded example of their code. 
-User can choose the programming language they wish to have result in.
-
-
