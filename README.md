@@ -9,6 +9,8 @@ Browser tool to paste JSON, pick a path (wizard, tree, or key search), choose a 
 - Site: [squaregoddess.uk](https://squaregoddess.uk)
 - GitHub: [@NejLee](https://github.com/NejLee)
 
+**Architecture:** [docs/architecture.md](docs/architecture.md) (Mermaid diagrams — repo layout & app flow).
+
 ---
 
 ## Publish as a public GitHub repository
@@ -76,7 +78,18 @@ Optional: add a `CHANGELOG.md` and update it each release.
 | Path | Purpose |
 |------|--------|
 | `json-traversal-wizard/` | Static app (`index.html`, `styles.css`, `script.js`) |
+| `json-traversal-wizard/favicon-*.png`, `apple-touch-icon.png` | Tab / home-screen icons (generated from logo) |
 | `branding/trvlogo.png` | Logo (referenced from the app) |
 | `brief/` | Project notes |
 
 No build step required for the static tool.
+
+### Regenerating favicons
+
+If you change `branding/trvlogo.png`, re-run (from `json-traversal-wizard/`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\generate-favicons.ps1
+```
+
+This writes `favicon-16x16.png`, `favicon-32x32.png`, `favicon-48x48.png`, and `apple-touch-icon.png` (180×180 for iOS / “Add to Home Screen”).
